@@ -4,7 +4,7 @@
 
 The project's ultimate goal is to move beyond traditional keyboard controls and implement **real-time gesture control** using computer vision.
 
-![Dino Vision Screenshot](assets/dino.png)
+![Dino Vision Screenshot](./assets/images/dino.png)
 
 ---
 
@@ -60,7 +60,7 @@ The next major phase of this project is to integrate computer vision for a uniqu
 1. **Clone the Repository**  
 
    ```bash
-   git clone git@github.com:josephed37/dino-vision.git
+   git clone https://github.com/josephed37/dino-vision.git
    cd dino-vision
    ```
 
