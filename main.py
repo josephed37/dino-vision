@@ -1,11 +1,28 @@
 import pygame
 import sys
 import random
+import os
 from config import *
 from game.components.player import Player
 from game.components.obstacle import Obstacle
 from game.components.background import Background
 from game.components.ground import Ground
+
+# --- High Score Functions ---
+def load_high_score():
+    """Loads the high score from a file."""
+    if os.path.exists('highscore.txt'):
+        try:
+            with open('highscore.txt', 'r') as file:
+                return int(file.read())
+        except ValueError:
+            return 0 # Handle case where file is empty or corrupted
+    return 0
+
+def save_high_score(score):
+    """Saves the high score to a file."""
+    with open('highscore.txt', 'w') as file:
+        file.write(str(score))
 
 def check_collisions(player, obstacles):
     """Check for collisions between the player and any obstacles using smaller hitboxes."""
@@ -31,11 +48,15 @@ player = Player()
 
 # Game State
 game_active = True
-game_font = pygame.font.Font(None, 50)
+game_font = pygame.font.Font(None, 40) # Slightly smaller font for score
 
 # --- Dynamic Game Variables ---
 obstacles = []
 current_speed = INITIAL_OBSTACLE_SPEED
+
+# Score variables
+current_score = 0
+high_score = load_high_score()
 
 # Manual spawn timer variables
 obstacle_spawn_timer = pygame.time.get_ticks()
@@ -44,6 +65,8 @@ obstacle_spawn_interval = random.randint(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL)
 # --- Main Game Loop ---
 while True:
     # --- Delta Time Calculation ---
+    # dt is the time in seconds since the last frame.
+    # We cap it at 0.1 to prevent huge jumps if the game lags.
     dt = min(clock.tick(FPS) / 1000.0, 0.1)
 
     # 1. Event Handling
@@ -56,33 +79,53 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     player.jump()
-        else:
+        else: # When game is over
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                # Reset the game
                 game_active = True
                 obstacles.clear()
                 player.reset()
                 current_speed = INITIAL_OBSTACLE_SPEED
+                current_score = 0 # Reset current score
                 obstacle_spawn_timer = pygame.time.get_ticks()
 
     # 2. Game Logic
     if game_active:
+        # Update positions based on the current speed
         background.update(current_speed, dt)
         ground.update(current_speed, dt)
         player.update(dt)
         for obstacle in obstacles:
             obstacle.update(current_speed, dt)
         
+        # Increase speed over time
         if current_speed < MAX_OBSTACLE_SPEED:
             current_speed += SPEED_ACCELERATION * dt
 
+        # Score Logic
+        for obstacle in obstacles:
+            if not obstacle.passed and obstacle.rect.right < player.rect.left:
+                obstacle.passed = True
+                current_score += 10
+
+        # Random obstacle spawning
         current_time = pygame.time.get_ticks()
         if current_time - obstacle_spawn_timer >= obstacle_spawn_interval:
             obstacles.append(Obstacle())
             obstacle_spawn_timer = current_time
             obstacle_spawn_interval = random.randint(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL)
 
-        game_active = check_collisions(player, obstacles)
+        # Collision check
+        is_still_active = check_collisions(player, obstacles)
+        # If the game just ended on this frame, check for high score
+        if game_active and not is_still_active:
+             if current_score > high_score:
+                high_score = current_score
+                save_high_score(high_score)
+        game_active = is_still_active
 
+
+        # Cleanup off-screen obstacles
         obstacles = [obstacle for obstacle in obstacles if obstacle.rect.right > 0]
     
     # 3. Drawing
@@ -92,6 +135,15 @@ while True:
     player.draw(screen)
     for obstacle in obstacles:
         obstacle.draw(screen)
+        
+    # Score Display
+    score_surface = game_font.render(f'Score: {current_score}', True, WHITE)
+    score_rect = score_surface.get_rect(topright=(SCREEN_WIDTH - 20, 20))
+    screen.blit(score_surface, score_rect)
+
+    high_score_surface = game_font.render(f'High: {high_score}', True, WHITE)
+    high_score_rect = high_score_surface.get_rect(topright=(SCREEN_WIDTH - 20, 60))
+    screen.blit(high_score_surface, high_score_rect)
         
     if not game_active:
         game_over_surface = game_font.render('Game Over', True, WHITE)

@@ -19,6 +19,7 @@ class Obstacle:
         self.rect = self.image.get_rect(
             bottomleft=(self.x_pos, GROUND_Y + PLAYER_FEET_OFFSET)
         )
+        self.passed = False
 
     def update(self, speed, dt):
         """Move the obstacle from right to left based on the current game speed."""

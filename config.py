@@ -3,7 +3,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 # Frame rate
-FPS = 60
+FPS = 120
 
 # Colors (R, G, B)
 BLACK = (0, 0, 0)
