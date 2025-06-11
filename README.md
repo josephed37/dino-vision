@@ -4,7 +4,7 @@
 
 The project's ultimate goal is to move beyond traditional keyboard controls and implement **real-time gesture control** using computer vision.
 
-> 💡 **To add your screenshot**: Take a picture of your game running, name it `dino_vision_screenshot.png`, and place it in the `assets/` folder.
+![Dino Vision Screenshot](assets/dino.png)
 
 ---
 
@@ -82,25 +82,3 @@ The next major phase of this project is to integrate computer vision for a uniqu
    ```bash
    python3 main.py
    ```
-
-Set Up a Virtual Environment
-
-bash
-Copy
-Edit
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-Install Dependencies
-
-bash
-Copy
-Edit
-pip install -r requirements.txt
-📌 Note: We will create the requirements.txt file in the next step.
-
-Run the Game
-
-bash
-Copy
-Edit
-python main.py
