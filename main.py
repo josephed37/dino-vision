@@ -1,31 +1,33 @@
-# This is the main entry point for our game.
-# This is the main entry point for our game.
 import pygame
 import sys
-
-# Import the configuration constants
 from config import *
 from game.components.player import Player
 from game.components.obstacle import Obstacle
 
-# --- Initialization ---
-# Initialize all imported pygame modules
-pygame.init()
+def check_collisions(player, obstacles):
+    """Check for collisions between the player and any obstacles."""
+    for obstacle in obstacles:
+        if player.rect.colliderect(obstacle.rect):
+            return False # Collision detected
+    return True # No collisions
 
-# Set up the display
+# --- Initialization ---
+pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Dino Vision")
-
-# Set up the clock for a consistent frame rate
 clock = pygame.time.Clock()
-
-#Create an instance of the Player
 player = Player()
 
 # Obstacle management
 obstacles = []
 OBSTACLE_SPAWN_EVENT = pygame.USEREVENT + 1
 pygame.time.set_timer(OBSTACLE_SPAWN_EVENT, OBSTACLE_SPAWN_RATE)
+
+# Game State
+game_active = True
+
+# NEW: Font initialization
+game_font = pygame.font.Font(None, 50) # Use Pygame's default font, size 50
 
 
 # --- Main Game Loop ---
@@ -36,39 +38,54 @@ while True:
             pygame.quit()
             sys.exit()
         
-        # Handle player input
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.jump()
-                
-        # Handle obstacle spawning
-        if event.type == OBSTACLE_SPAWN_EVENT:
-            obstacles.append(Obstacle())
-                
-    # Game Logic
-    player.update()
-    
-    # Update obstacles
-    for obstacle in obstacles:
-        obstacle.update()
+        if game_active:
+              # Handle input during the active game
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.jump()
+            if event.type == OBSTACLE_SPAWN_EVENT:
+                obstacles.append(Obstacle())
+        else: # Handle input during the game over state
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                # Reset the game
+                game_active = True
+                obstacles.clear()
+                player.reset()
 
-    # Cleanup off-screen obstacles
-    obstacles = [obstacle for obstacle in obstacles if obstacle.rect.right > 0]
+    # 2. Game Logic
+    if game_active:
+        player.update()
+        for obstacle in obstacles:
+            obstacle.update()
 
-    
-    # 2. Drawing
-    # Fill the background with black
+        game_active = check_collisions(player, obstacles)
+
+        obstacles = [obstacle for obstacle in obstacles if obstacle.rect.right > 0]
+
+
+    # 3. Drawing
     screen.fill(BLACK)
     player.draw(screen)
-    
     for obstacle in obstacles:
         obstacle.draw(screen)
+        
+    # Draw Game Over screen if not active
+    if not game_active:
+        # Create the text surfaces
+        game_over_surface = game_font.render('Game Over', True, WHITE)
+        restart_surface = game_font.render('Press Space to Restart', True, WHITE)
+        
+        # Get the rectangles for positioning
+        game_over_rect = game_over_surface.get_rect(center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 40))
+        restart_rect = restart_surface.get_rect(center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40))
+
+        # Draw the text to the screen
+        screen.blit(game_over_surface, game_over_rect)
+        screen.blit(restart_surface, restart_rect)
 
 
-    # 3. Updating the screen
-    # Update the full display Surface to the screen
+    # 4. Updating the screen
     pygame.display.update()
 
-    # 4. Frame Rate Control
-    # Ensure the game does not run faster than FPS frames per second
+    # 5. Frame Rate Control
     clock.tick(FPS)

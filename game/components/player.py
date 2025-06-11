@@ -16,6 +16,11 @@ class Player:
         )
         self.color = WHITE
         self.y_velocity = 0
+    
+    def reset(self): # NEW METHOD
+        """Reset the player to its starting position and state."""
+        self.rect.y = GROUND_Y - PLAYER_HEIGHT
+        self.y_velocity = 0
         
     def jump(self): # NEW METHOD
         """Makes the player jump, but only if they are on the ground."""
